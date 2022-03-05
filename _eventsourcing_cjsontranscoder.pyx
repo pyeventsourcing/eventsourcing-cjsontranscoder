@@ -6,6 +6,8 @@ from json.encoder import encode_basestring
 from typing import Any, Union, cast
 from uuid import UUID
 
+from eventsourcing.persistence import Transcoding
+
 NoneType = type(None)
 
 from cpython.dict cimport PyDict_GetItem, PyDict_Items
@@ -49,10 +51,12 @@ cdef class CJSONTranscoder:
         self.names = {}
         self.decoder = JSONDecoder()
 
-    def register(self, CTranscoding transcoding):
+    def register(self, transcoding):
         """
         Registers given transcoding with the transcoder.
         """
+        if isinstance(transcoding, Transcoding):
+            transcoding = CTranscodingAdaptor(transcoding)
         self.types[transcoding.type()] = transcoding
         self.names[transcoding.name()] = transcoding
 
@@ -354,6 +358,28 @@ cdef class CTranscoding:
 
     cpdef object decode(self, object data):
         raise NotImplementedError()
+
+
+cdef class CTranscodingAdaptor(CTranscoding):
+    """
+    Adaptor for Transcoding objects.
+    """
+    cdef object transcoding
+
+    def __init__(self, transcoding: Transcoding):
+        self.transcoding = transcoding
+
+    cpdef object type(self):
+        return self.transcoding.type
+
+    cpdef str name(self):
+        return self.transcoding.name
+
+    cpdef object encode(self, object obj):
+        return self.transcoding.encode(obj)
+
+    cpdef object decode(self, object data):
+        return self.transcoding.decode(data)
 
 
 cdef class CTupleAsList(CTranscoding):

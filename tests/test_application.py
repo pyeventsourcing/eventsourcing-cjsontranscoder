@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from eventsourcing.application import Application
 from eventsourcing.domain import Aggregate, event
+from eventsourcing.persistence import Transcoding
 
 from eventsourcing_cjsontranscoder import (
     CDatetimeAsISO,
@@ -33,6 +34,25 @@ class CMyIntAsInt(CTranscoding):
         return MyInt(data)
 
 
+class MyStr(str):
+    def __repr__(self):
+        return f"{type(self).__name__}({super().__repr__()})"
+
+    def __eq__(self, other):
+        return type(self) == type(other) and super().__eq__(other)
+
+
+class MyStrAsStr(Transcoding):
+    type = MyStr
+    name = "mystr_as_str"
+
+    def encode(self, obj):
+        return str(obj)
+
+    def decode(self, data):
+        return MyStr(data)
+
+
 class DogSchool(Application):
     def construct_transcoder(self):
         transcoder = CJSONTranscoder()
@@ -44,6 +64,7 @@ class DogSchool(Application):
         transcoder.register(CDatetimeAsISO())
         transcoder.register(CTupleAsList())
         transcoder.register(CMyIntAsInt())
+        transcoder.register(MyStrAsStr())
 
     def register_dog(self, name, age):
         dog = Dog(name, age)
@@ -86,15 +107,15 @@ def test_dog_school():
     school = DogSchool()
 
     # Evolve application state.
-    dog_id = school.register_dog("Fido", MyInt(2))
-    school.add_trick(dog_id, "roll over")
-    school.add_trick(dog_id, "play dead")
+    dog_id = school.register_dog(MyStr("Fido"), MyInt(2))
+    school.add_trick(dog_id, MyStr("roll over"))
+    school.add_trick(dog_id, MyStr("play dead"))
     school.update_age(dog_id, MyInt(5))
 
     # Query application state.
     dog = school.get_dog(dog_id)
-    assert dog["name"] == "Fido"
-    assert dog["tricks"] == ("roll over", "play dead")
+    assert dog["name"] == MyStr("Fido")
+    assert dog["tricks"] == (MyStr("roll over"), MyStr("play dead"))
     assert dog["age"] == MyInt(5)
 
     # Select notifications.

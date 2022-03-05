@@ -106,4 +106,4 @@ jobs:
           tmpvenv/bin/pip3 install -U pip
           tmpvenv/bin/pip3 install dist/*
           tmpvenv/bin/python3 -c "import eventsourcing_cjsontranscoder"
-          tmpvenv/bin/python3 -c "from eventsourcing_cjsontranscoder import CJSONTranscoder"
+          tmpvenv/bin/python3 -c "from eventsourcing_cjsontranscoder import CJSONTranscoder; print("CJSONTranscoder installed at:", CJSONTranscoder.__file__)"

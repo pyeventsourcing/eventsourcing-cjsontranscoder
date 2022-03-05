@@ -45,11 +45,11 @@ However, it's nice that it is not slower.
 
 | class           |  encode |  decode |
 |-----------------|--------:|--------:|
-| CJSONTranscoder | 11.6 μs | 15.4 μs |
-| JSON Transcoder | 24.9 μs | 25.3 μs |
+| CJSONTranscoder |  9.3 μs | 12.9 μs |
+| JSON Transcoder | 15.0 μs | 13.5 μs |
 
-The above benchmark was performed on GitHub using the following object,
-which is perhaps representative of the state of a domain event in an
+The above benchmark was performed with Python 3.10 on GitHub using the following
+object, which is perhaps representative of the state of a domain event in an
 event-sourced application.
 
 ```python

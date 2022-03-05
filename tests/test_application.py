@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from eventsourcing.application import Application
 from eventsourcing.domain import Aggregate, event
 

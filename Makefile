@@ -80,7 +80,7 @@ lint-mypy:
 	$(POETRY) run mypy
 
 .PHONY: lint-python
-lint-python: lint-black lint-flake8 lint-isort lint-mypy
+lint-python: lint-black lint-flake8 lint-isort #lint-mypy
 
 .PHONY: lint
 lint: lint-python

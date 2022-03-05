@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import timeit
 from time import sleep
 from uuid import NAMESPACE_URL, UUID, uuid5

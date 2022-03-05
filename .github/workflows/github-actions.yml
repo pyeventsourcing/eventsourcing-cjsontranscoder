@@ -102,5 +102,5 @@ jobs:
           rm eventsourcing_cjsontranscoder.py
           rm _eventsourcing_cjsontranscoder.pxd
           rm _eventsourcing_cjsontranscoder.pyx
-          pip install dist/*
+          poetry run pip install dist/*
           make test

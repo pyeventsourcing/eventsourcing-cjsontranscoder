@@ -106,18 +106,13 @@ description = "Event sourcing in Python"
 category = "main"
 optional = false
 python-versions = ">=3.7"
-develop = true
 
 [package.extras]
 crypto = ["pycryptodome (<=3.12.99999)"]
-dev = ["psycopg2-binary (<=2.9.99999)", "pycryptodome (<=3.12.99999)", "Sphinx (==4.2.0)", "sphinx_rtd_theme (==1.0.0)", "python-coveralls", "coverage", "black", "mypy", "flake8", "flake8-bugbear", "isort", "backports.zoneinfo"]
-docs = ["psycopg2-binary (<=2.9.99999)", "pycryptodome (<=3.12.99999)", "Sphinx (==4.2.0)", "sphinx_rtd_theme (==1.0.0)"]
+dev = ["psycopg2-binary (<=2.9.99999)", "pycryptodome (<=3.12.99999)", "Sphinx (==4.2.0)", "sphinx-rtd-theme (==1.0.0)", "python-coveralls", "coverage", "black", "mypy", "flake8", "flake8-bugbear", "isort", "backports.zoneinfo"]
+docs = ["psycopg2-binary (<=2.9.99999)", "pycryptodome (<=3.12.99999)", "Sphinx (==4.2.0)", "sphinx-rtd-theme (==1.0.0)"]
 postgres = ["psycopg2 (<=2.9.99999)"]
 postgres_dev = ["psycopg2-binary (<=2.9.99999)"]
-
-[package.source]
-type = "directory"
-url = "../eventsourcing"
 
 [[package]]
 name = "filelock"
@@ -529,7 +524,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "90cdcd14e1dbad491d13503c4bd3beacc174173a563161a1c8e62b4e36bd768c"
+content-hash = "598f291bbac8c0c2d921926ea51491f661a7f05f297da96fa26e137885022a67"
 
 [metadata.files]
 atomicwrites = [
@@ -662,7 +657,10 @@ distlib = [
     {file = "distlib-0.3.4-py2.py3-none-any.whl", hash = "sha256:6564fe0a8f51e734df6333d08b8b94d4ea8ee6b99b5ed50613f731fd4089f34b"},
     {file = "distlib-0.3.4.zip", hash = "sha256:e4b58818180336dc9c529bfb9a0b58728ffc09ad92027a3f30b7cd91e3458579"},
 ]
-eventsourcing = []
+eventsourcing = [
+    {file = "eventsourcing-9.2.3-py3-none-any.whl", hash = "sha256:d3a8347a00063b24fff37bc8c4f928df5b39e8a436e04d39c3d75024ed39938c"},
+    {file = "eventsourcing-9.2.3.tar.gz", hash = "sha256:e92073789d2482b908303d1af396dbdfc9a54c82e59403d8853a768e1d205a0e"},
+]
 filelock = [
     {file = "filelock-3.6.0-py3-none-any.whl", hash = "sha256:f8314284bfffbdcfa0ff3d7992b023d4c628ced6feb957351d4c48d059f56bc0"},
     {file = "filelock-3.6.0.tar.gz", hash = "sha256:9cd540a9352e432c7246a48fe4e8712b10acb1df2ad1f30e8c070b82ae1fed85"},

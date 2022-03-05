@@ -111,21 +111,21 @@ as a Cython extension type class in a Cython module (``.pyx`` file) using the
 ``CTranscoding`` extension type. See this project's Git repository for examples.
 
 ```cython
-from eventsourcing_cjsontranscoder cimport CTranscoding
+from _eventsourcing_cjsontranscoder cimport CTranscoding
 
 from my_domain_model import MyInt
 
 cdef class CMyIntAsInt(CTranscoding):
-    cdef object type(self):
+    cpdef object type(self):
         return MyInt
 
-    cdef str name(self):
+    cpdef str name(self):
         return "myint_as_int"
 
-    cdef object encode(self, object obj):
+    cpdef object encode(self, object obj):
         return int(obj)
 
-    cdef object decode(self, object data):
+    cpdef object decode(self, object data):
         return MyInt(data)
 ```
 

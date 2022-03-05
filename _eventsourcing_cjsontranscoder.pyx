@@ -1,8 +1,8 @@
 # cython: language_level=3, boundscheck=False, wraparound=False, nonecheck=False, binding=False
 from datetime import datetime
-from json import JSONDecoder, JSONEncoder
+from json import JSONDecoder
 from json.encoder import encode_basestring
-from typing import Any, Union, cast
+from typing import cast
 from uuid import UUID
 
 from eventsourcing.persistence import Transcoding

@@ -32,56 +32,54 @@ jobs:
         run: make install-packages opts="--no-root"
 #        run: make install-packages
 
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+        os: [ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up cache
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/.local
+          key: os-${{ matrix.os }}-python-${{ matrix.python-version}}-${{ hashFiles('**/poetry.lock') }}
+      - name: Lint
+        run: make lint
 
-#  lint:
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        python-version: ["3.8", "3.9", "3.10"]
-#        os: [ubuntu-20.04]
-#    runs-on: ${{ matrix.os }}
-#    needs: prepare
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/setup-python@v2
-#        with:
-#          python-version: ${{ matrix.python-version }}
-#      - name: Set up cache
-#        uses: actions/cache@v2
-#        with:
-#          path: /home/runner/.local
-#          key: os-${{ matrix.os }}-python-${{ matrix.python-version}}-${{ hashFiles('**/poetry.lock') }}
-#      - name: Lint
-#        run: make lint
-#
-#  tests:
-#    needs: prepare
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        python-version: ["3.8", "3.9", "3.10"]
-#        os: [ubuntu-20.04]
-#    runs-on: ${{ matrix.os }}
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/setup-python@v2
-#        with:
-#          python-version: ${{ matrix.python-version }}
-#      - name: Set up cache
-#        uses: actions/cache@v2
-#        with:
-#          path: /home/runner/.local
-#          key: os-${{ matrix.os }}-python-${{ matrix.python-version}}-${{ hashFiles('**/poetry.lock') }}
-#      - name: Build extensions in place
-#        run: |
-#          pip install Cython
-#          make build-inplace
-#      - name: Run tests
-#        run: make test
+  tests:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+        os: [ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up cache
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/.local
+          key: os-${{ matrix.os }}-python-${{ matrix.python-version}}-${{ hashFiles('**/poetry.lock') }}
+      - name: Build extensions in place
+        run: |
+          pip install Cython
+          make build-inplace
+      - name: Run tests
+        run: make test
 
   sdist:
-#    needs: [lint, tests]
-    needs: [prepare]
+    needs: [lint, tests]
     strategy:
       fail-fast: false
       matrix:

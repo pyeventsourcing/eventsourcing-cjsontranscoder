@@ -8,7 +8,7 @@ from eventsourcing.tests.persistence import (
     MyStr,
 )
 
-from eventsourcing_cjsontranscoder cimport CTranscoding
+from _eventsourcing_cjsontranscoder cimport CTranscoding
 
 
 cdef class CCustomType1AsDict(CTranscoding):

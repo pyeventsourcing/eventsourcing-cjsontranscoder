@@ -19,7 +19,7 @@ from eventsourcing_cjsontranscoder import (
     CTupleAsList,
     CUUIDAsHex,
 )
-from tests.cjson_transcodings import (
+from tests._cjson_transcodings import (
     CCustomType1AsDict,
     CCustomType2AsDict,
     CMyDictAsDict,

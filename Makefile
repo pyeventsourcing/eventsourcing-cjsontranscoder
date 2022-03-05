@@ -110,6 +110,6 @@ publish:
 
 .PHONY: build-inplace
 build-inplace:
-	$(POETRY) run cythonize -i eventsourcing_cjsontranscoder.pyx
-	$(POETRY) run cythonize -i tests/cjson_transcodings.pyx
+	$(POETRY) run cythonize -i _eventsourcing_cjsontranscoder.pyx
+	$(POETRY) run cythonize -i tests/_cjson_transcodings.pyx
 

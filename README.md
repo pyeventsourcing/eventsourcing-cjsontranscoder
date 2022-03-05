@@ -82,7 +82,7 @@ project, but it is also the slowest option.
 Alternatively, you can define custom transcodings in pure Python code by subclassing
 the Cython extension type `CTranscoding`. The prefix `C` is used to distinguish
 these classes from the `Transcoding` classes provided by the core Python
-eventsourcing library. For example, consider the classes `MyInt` and `CCMyIntAsStr`
+eventsourcing library. For example, consider the classes `MyInt` and `CMyIntAsInt`
 below.
 
 ```python

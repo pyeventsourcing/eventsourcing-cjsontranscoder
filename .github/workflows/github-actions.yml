@@ -79,7 +79,7 @@ jobs:
         run: make test
 
   sdist:
-    needs: [lint, test]
+    needs: [lint, tests]
     strategy:
       fail-fast: false
       matrix:
@@ -99,9 +99,9 @@ jobs:
       - name: Build distribution
         run: |
           make build
-#          rm eventsourcing_cjsontranscoder.py
-#          rm _eventsourcing_cjsontranscoder.pxd
-#          rm _eventsourcing_cjsontranscoder.pyx
-#          pip install dist/eventsourcing_cjsontranscoder.*
-#          python -c "from eventsourcing_cjsontranscoder import CJSONTranscoder"
-#          make test
+          rm eventsourcing_cjsontranscoder.py
+          rm _eventsourcing_cjsontranscoder.pxd
+          rm _eventsourcing_cjsontranscoder.pyx
+          pip install dist/eventsourcing_cjsontranscoder.*
+          python -c "from eventsourcing_cjsontranscoder import CJSONTranscoder"
+          make test

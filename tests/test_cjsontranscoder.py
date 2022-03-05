@@ -11,9 +11,9 @@ from eventsourcing.tests.persistence import (
     CustomType1AsDict,
     CustomType2,
     CustomType2AsDict,
-    TranscoderTestCase,
     MyInt,
     MyStr,
+    TranscoderTestCase,
 )
 from orjson import orjson
 
@@ -63,12 +63,10 @@ class TestCJSONTranscoder(TranscoderTestCase):
         # which seems weird. See also test_int_subclass().
         self.assertEqual("buddy", str(obj))
         self.assertEqual("MyStr('buddy')", repr(obj))
-        self.assertEqual(MyStr('buddy'), copy(obj))
+        self.assertEqual(MyStr("buddy"), copy(obj))
         self.assertEqual("buddy", obj.encode().decode())
         data = transcoder.encode(obj)
-        self.assertEqual(
-            data, b'{"_type_":"mystr","_data_":"buddy"}'
-        )
+        self.assertEqual(data, b'{"_type_":"mystr","_data_":"buddy"}')
         _copy = transcoder.decode(data)
         self.assertEqual(obj, _copy)
 

@@ -2,10 +2,7 @@
 from eventsourcing.application import Application
 from eventsourcing.domain import Aggregate, event
 from eventsourcing.persistence import Transcoding
-from eventsourcing.tests.persistence import (
-    MyInt,
-    MyStr,
-)
+from eventsourcing.tests.persistence import MyInt, MyStr
 
 from eventsourcing_cjsontranscoder import (
     CDatetimeAsISO,

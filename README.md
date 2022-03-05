@@ -2,7 +2,9 @@
 
 This package provides a `CJSONTranscoder` class for use with
 the Python eventsourcing library, that uses Cython for greater
-speed and transcoding of subclasses of built-in types.
+speed, but more importantly for transcoding of `tuple` objects
+and subclasses of `str`, `int`, `float`, `dict` and `tuple`.
+
 
 ## Installation
 
@@ -33,10 +35,10 @@ b'{"_type_":"tuple_as_list","_data_":[1,2,3]}'
 ## Features
 
 Most importantly, `CJSONTranscoder` supports custom transcoding of instances
-of `tuple` and subclasses of `str`, `int`, `dict` and `tuple`. This is an
+of `tuple` and subclasses of `str`, `int`, `float`, `dict` and `tuple`. This is an
 important improvement on the core library's `JSONTranscoder` class which,
 converts `tuple` to `list` and loses type information for subclasses of
-`str`, `int`, `list`, `dict` and `tuple`. That is because of the way Python's
+`str`, `int`, `float`, `list`, `dict` and `tuple`. That is because of the way Python's
 `JSONEncoder` class functions, which doesn't pass through subclasses
 of these types to the `default` method. This is important in a domain-driven
 design, in which the ubiquitous language may be expressed as subclasses of
@@ -45,12 +47,12 @@ these types.
 The `CJSONTranscoder` is also faster than `JSONTranscoder`, encoding approximately
 x2 faster. This is less important than the preservation of type information (see above)
 because latency in your application will usually be dominated by database interactions.
-However, it's nice that it is not slower.
+However, it's nice that it's not slower.
 
 | class           |  encode |  decode |
 |-----------------|--------:|--------:|
 | CJSONTranscoder |  9.3 μs | 12.9 μs |
-| JSON Transcoder | 15.0 μs | 13.5 μs |
+| JSONTranscoder  | 15.0 μs | 13.5 μs |
 
 The above benchmark was performed with Python 3.10 on GitHub using the following
 object, which is perhaps representative of the state of a domain event in an

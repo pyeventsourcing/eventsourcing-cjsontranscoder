@@ -9,7 +9,7 @@ from Cython.Build import cythonize
 def build(setup_kwargs):
     # The file you want to compile
     extensions = [
-        "_eventsourcing_orjsontranscoder.pyx",
+        "_eventsourcing_cjsontranscoder.pyx",
     ]
 
     # gcc arguments hack: enable optimizations

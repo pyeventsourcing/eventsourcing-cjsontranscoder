@@ -102,6 +102,6 @@ jobs:
           rm eventsourcing_cjsontranscoder.py
           rm _eventsourcing_cjsontranscoder.pxd
           rm _eventsourcing_cjsontranscoder.pyx
-          pip install dist/eventsourcing_cjsontranscoder.*
+          pip install dist/*
           python -c "from eventsourcing_cjsontranscoder import CJSONTranscoder"
           make test

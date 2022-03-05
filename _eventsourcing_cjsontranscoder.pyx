@@ -1,5 +1,4 @@
-# cython: linetrace=True, language_level=3, boundscheck=False, wraparound=False, nonecheck=False, binding=False
-# distutils: define_macros=CYTHON_TRACE_NOGIL=1
+# cython: language_level=3, boundscheck=False, wraparound=False, nonecheck=False, binding=False
 from datetime import datetime
 from json import JSONDecoder, JSONEncoder
 from json.encoder import encode_basestring

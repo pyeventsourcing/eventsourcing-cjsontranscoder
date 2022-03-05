@@ -3,19 +3,19 @@
 from datetime import datetime
 from json import JSONDecoder, JSONEncoder
 from json.encoder import encode_basestring
-from typing import cast, Any, Union
+from typing import Any, Union, cast
 from uuid import UUID
 
 NoneType = type(None)
 
-from cpython.object cimport PyObject, PyTypeObject
-from cpython.dict cimport PyDict_Items, PyDict_GetItem
-from cpython.list cimport PyList_Append, PyList_Size, PyList_GET_ITEM
-from cpython.tuple cimport PyTuple_GET_ITEM
-from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
-from cpython.ref cimport Py_INCREF, Py_DECREF
+from cpython.dict cimport PyDict_GetItem, PyDict_Items
 from cpython.exc cimport PyErr_SetString
-from cpython.unicode cimport PyUnicode_Join, PyUnicode_AsUTF8String
+from cpython.list cimport PyList_Append, PyList_GET_ITEM, PyList_Size
+from cpython.mem cimport PyMem_Free, PyMem_Malloc
+from cpython.object cimport PyObject, PyTypeObject
+from cpython.ref cimport Py_DECREF, Py_INCREF
+from cpython.tuple cimport PyTuple_GET_ITEM
+from cpython.unicode cimport PyUnicode_AsUTF8String, PyUnicode_Join
 
 
 cdef PyObject * LIST_START = <PyObject *>"["

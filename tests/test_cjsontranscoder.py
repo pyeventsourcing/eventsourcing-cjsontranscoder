@@ -3,11 +3,7 @@ from time import sleep
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from eventsourcing.domain import DomainEvent
-from eventsourcing.persistence import (
-    DatetimeAsISO,
-    JSONTranscoder,
-    UUIDAsHex,
-)
+from eventsourcing.persistence import DatetimeAsISO, JSONTranscoder, UUIDAsHex
 from eventsourcing.tests.persistence import (
     CustomType1,
     CustomType1AsDict,
@@ -16,8 +12,12 @@ from eventsourcing.tests.persistence import (
     TranscoderTestCase,
 )
 
-from eventsourcing_cjsontranscoder import CDatetimeAsISO, CTupleAsList, CUUIDAsHex
-from eventsourcing_cjsontranscoder import CJSONTranscoder
+from eventsourcing_cjsontranscoder import (
+    CDatetimeAsISO,
+    CJSONTranscoder,
+    CTupleAsList,
+    CUUIDAsHex,
+)
 from tests.cjson_transcodings import (
     CCustomType1AsDict,
     CCustomType2AsDict,
@@ -26,8 +26,6 @@ from tests.cjson_transcodings import (
     CMyListAsList,
     CMyStrAsStr,
 )
-
-
 
 
 class TestCJSONTranscoder(TranscoderTestCase):

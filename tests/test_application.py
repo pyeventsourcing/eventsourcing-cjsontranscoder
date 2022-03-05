@@ -3,10 +3,10 @@ from eventsourcing.domain import Aggregate, event
 
 from eventsourcing_cjsontranscoder import (
     CDatetimeAsISO,
+    CJSONTranscoder,
     CTranscoding,
     CTupleAsList,
     CUUIDAsHex,
-    CJSONTranscoder,
 )
 
 

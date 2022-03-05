@@ -78,7 +78,7 @@ jobs:
       - name: Run tests
         run: make test
 
-  build:
+  sdist:
     needs: [lint, test]
     strategy:
       fail-fast: false
@@ -96,13 +96,12 @@ jobs:
         with:
           path: /home/runner/.local
           key: os-${{ matrix.os }}-python-${{ matrix.python-version}}-${{ hashFiles('**/poetry.lock') }}
-      - name: Build extensions in place
+      - name: Build distribution
         run: |
           make build
-          rm eventsourcing_cjsontranscoder.py
-          rm _eventsourcing_cjsontranscoder.pxd
-          rm _eventsourcing_cjsontranscoder.pyx
-          pip install dist/eventsourcing_cjsontranscoder.*
-          python -c "from eventsourcing_cjsontranscoder import CJSONTranscoder"
-      - name: Run tests
-        run: make test
+#          rm eventsourcing_cjsontranscoder.py
+#          rm _eventsourcing_cjsontranscoder.pxd
+#          rm _eventsourcing_cjsontranscoder.pyx
+#          pip install dist/eventsourcing_cjsontranscoder.*
+#          python -c "from eventsourcing_cjsontranscoder import CJSONTranscoder"
+#          make test

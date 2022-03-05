@@ -2,6 +2,10 @@
 from eventsourcing.application import Application
 from eventsourcing.domain import Aggregate, event
 from eventsourcing.persistence import Transcoding
+from eventsourcing.tests.persistence import (
+    MyInt,
+    MyStr,
+)
 
 from eventsourcing_cjsontranscoder import (
     CDatetimeAsISO,
@@ -12,14 +16,7 @@ from eventsourcing_cjsontranscoder import (
 )
 
 
-class MyInt(int):
-    def __repr__(self):
-        return f"{type(self).__name__}({super().__repr__()})"
-
-    def __eq__(self, other):
-        return type(self) == type(other) and super().__eq__(other)
-
-
+# Subclass of Cython extension type in pure Python.
 class CMyIntAsInt(CTranscoding):
     def type(self):
         return MyInt
@@ -34,14 +31,7 @@ class CMyIntAsInt(CTranscoding):
         return MyInt(data)
 
 
-class MyStr(str):
-    def __repr__(self):
-        return f"{type(self).__name__}({super().__repr__()})"
-
-    def __eq__(self, other):
-        return type(self) == type(other) and super().__eq__(other)
-
-
+# Subclass of Transcoding class.
 class MyStrAsStr(Transcoding):
     type = MyStr
     name = "mystr_as_str"
@@ -107,6 +97,20 @@ def test_dog_school():
     school = DogSchool()
 
     # Evolve application state.
+    dog_id = school.register_dog("Fido", 2)
+    school.add_trick(dog_id, "roll over")
+    school.add_trick(dog_id, "play dead")
+    school.update_age(dog_id, 5)
+
+    # Query application state.
+    dog = school.get_dog(dog_id)
+    assert dog["name"] == "Fido"
+    assert type(dog["name"]) is str
+    assert dog["tricks"] == ("roll over", "play dead")
+    assert dog["age"] == 5
+    assert type(dog["age"]) is int
+
+    # Evolve application state.
     dog_id = school.register_dog(MyStr("Fido"), MyInt(2))
     school.add_trick(dog_id, MyStr("roll over"))
     school.add_trick(dog_id, MyStr("play dead"))
@@ -120,4 +124,4 @@ def test_dog_school():
 
     # Select notifications.
     notifications = school.notification_log.select(start=1, limit=10)
-    assert len(notifications) == 4
+    assert len(notifications) == 8

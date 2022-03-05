@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import timeit
+from copy import copy
 from time import sleep
 from uuid import NAMESPACE_URL, UUID, uuid5
 
@@ -11,7 +12,10 @@ from eventsourcing.tests.persistence import (
     CustomType2,
     CustomType2AsDict,
     TranscoderTestCase,
+    MyInt,
+    MyStr,
 )
+from orjson import orjson
 
 from eventsourcing_cjsontranscoder import (
     CDatetimeAsISO,
@@ -49,6 +53,25 @@ class TestCJSONTranscoder(TranscoderTestCase):
     def test_str(self):
         super().test_str()
 
+    def test_str_subclass(self):
+        transcoder = self.construct_transcoder()
+        obj = MyStr("buddy")
+        # Weirdly __str__ for str isn't the same as __repr__,
+        # but then if it were, there wouldn't be a way to get
+        # the actual str (without .encode().decode()). Even
+        # str.__str__() doesn't escape the subclass __str__
+        # which seems weird. See also test_int_subclass().
+        self.assertEqual("buddy", str(obj))
+        self.assertEqual("MyStr('buddy')", repr(obj))
+        self.assertEqual(MyStr('buddy'), copy(obj))
+        self.assertEqual("buddy", obj.encode().decode())
+        data = transcoder.encode(obj)
+        self.assertEqual(
+            data, b'{"_type_":"mystr","_data_":"buddy"}'
+        )
+        _copy = transcoder.decode(data)
+        self.assertEqual(obj, _copy)
+
     def test_none_type(self):
         transcoder = self.construct_transcoder()
         obj = None
@@ -82,9 +105,31 @@ class TestCJSONTranscoder(TranscoderTestCase):
 
     def test_int(self):
         transcoder = self.construct_transcoder()
-        obj = 11111111111111111111111111111111111
+        obj = 11111111111111111111111111111111111111111111
         data = transcoder.encode(obj)
-        self.assertEqual(data, b"11111111111111111111111111111111111")
+        self.assertEqual(data, b"11111111111111111111111111111111111111111111")
+        copy = transcoder.decode(data)
+        self.assertEqual(obj, copy)
+
+        # It isn't possible to encode very large integers with orjson.
+        with self.assertRaises(TypeError) as cm:
+            orjson.dumps(11111111111111111111111111111111111)
+        self.assertEqual(cm.exception.args[0], "Integer exceeds 64-bit range")
+
+    def test_int_subclass(self):
+        transcoder = self.construct_transcoder()
+        obj = MyInt(11111111111111111111111111111111111)
+        # This is also weird, because if __str__ is defined on subclass
+        # to give MyInt(c) by calling super()__str__() to give "c" then
+        # str(MyInt(c)) somehow gives "MyInt(MyInt(c)" although
+        # int.__str__(MyInt(c)) gives "MyInt(c)" so presumably it should
+        # recurse infinitely? See also test_str_subclass().
+        self.assertEqual("MyInt(11111111111111111111111111111111111)", str(obj))
+        self.assertEqual("MyInt(11111111111111111111111111111111111)", repr(obj))
+        data = transcoder.encode(obj)
+        self.assertEqual(
+            data, b'{"_type_":"myint","_data_":11111111111111111111111111111111111}'
+        )
         copy = transcoder.decode(data)
         self.assertEqual(obj, copy)
 
@@ -150,7 +195,7 @@ class TestCJSONTranscoder(TranscoderTestCase):
         # Warm up.
         timeit.timeit(lambda: transcoder.encode(obj), number=100)
 
-        number = 100000
+        number = 10000
         duration = timeit.timeit(lambda: transcoder.encode(obj), number=number)
         print(
             f"{transcoder.__class__.__name__} encode:"

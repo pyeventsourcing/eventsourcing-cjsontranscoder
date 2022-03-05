@@ -36,12 +36,15 @@ Most importantly, `CJSONTranscoder` supports custom transcoding of instances
 of `tuple` and subclasses of `str`, `int`, `dict` and `tuple`. This is an
 important improvement on the core library's `JSONTranscoder` class which,
 converts `tuple` to `list` and loses type information for subclasses of
-`str`, `int`, `dict` and `tuple`. This is because of the way Python's
-`JSONEncoder` class functions,
+`str`, `int`, `list`, `dict` and `tuple`. That is because of the way Python's
+`JSONEncoder` class functions, which doesn't pass through subclasses
+of these types to the `default` method. This is important in a domain-driven
+design, in which the ubiquitous language may be expressed as subclasses of
+these types.
 
-It is also faster than `JSONTranscoder`, encoding approximately x2 faster. This
-is less important than the preservation of type information (see above) because
-latency in your application will  usually be dominated by database interactions.
+The `CJSONTranscoder` is also faster than `JSONTranscoder`, encoding approximately
+x2 faster. This is less important than the preservation of type information (see above)
+because latency in your application will usually be dominated by database interactions.
 However, it's nice that it is not slower.
 
 | class           |  encode |  decode |
@@ -76,10 +79,10 @@ You can register subclasses of the `Transcoding` class with the `CJSONTranscoder
 This is the easiest option if you have already defined transcodings for in your
 project, but it is also the slowest option.
 
-Alternatively, you can define in pure Python code custom transcodings by subclassing
+Alternatively, you can define custom transcodings in pure Python code by subclassing
 the Cython extension type `CTranscoding`. The prefix `C` is used to distinguish
 these classes from the `Transcoding` classes provided by the core Python
-eventsourcing library. For example, consider the classes `MyInt` and `CCMyIntAsInt`
+eventsourcing library. For example, consider the classes `MyInt` and `CCMyIntAsStr`
 below.
 
 ```python
@@ -111,9 +114,9 @@ class CMyIntAsInt(CTranscoding):
         return MyInt(data)
 ```
 
-Alternatively for greater speed, you can define a custom transcoding for `MyInt`
-as a Cython extension type in a Cython module (`.pyx` file) using the
-`CTranscoding` extension type.
+Alternatively for slightly greater transcoding performance, you can define a
+custom transcoding for `MyInt` as a Cython extension type in a Cython module
+(`.pyx` file) using the `CTranscoding` extension type.
 
 ```cython
 from _eventsourcing_cjsontranscoder cimport CTranscoding

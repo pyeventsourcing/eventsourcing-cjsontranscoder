@@ -1,5 +1,6 @@
 # cython: language_level=3, boundscheck=False, wraparound=False, nonecheck=False, binding=False
 from datetime import datetime
+from decimal import Decimal
 from json import JSONDecoder
 from json.encoder import encode_basestring
 from typing import cast
@@ -430,3 +431,21 @@ cdef class CUUIDAsHex(CTranscoding):
 
     cpdef object decode(self, object data):
         return UUID(data)
+
+
+cdef class CDecimalAsStr(CTranscoding):
+    """
+    Transcoding that represents :class:`Decimal` objects as strings.
+    """
+
+    cpdef object type(self):
+        return Decimal
+
+    cpdef str name(self):
+        return "decimal_str"
+
+    cpdef object encode(self, object obj):
+        return str(obj)
+
+    cpdef object decode(self, object data):
+        return Decimal(data)

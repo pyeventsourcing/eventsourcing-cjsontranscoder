@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import timeit
 from copy import copy
+from decimal import Decimal
 from time import sleep
 from uuid import NAMESPACE_URL, UUID, uuid5
 
@@ -19,6 +20,7 @@ from orjson import orjson
 
 from eventsourcing_cjsontranscoder import (
     CDatetimeAsISO,
+    CDecimalAsStr,
     CJSONTranscoder,
     CTupleAsList,
     CUUIDAsHex,
@@ -39,6 +41,7 @@ class TestCJSONTranscoder(TranscoderTestCase):
         transcoder.register(CTupleAsList())
         transcoder.register(CDatetimeAsISO())
         transcoder.register(CUUIDAsHex())
+        transcoder.register(CDecimalAsStr())
         transcoder.register(CCustomType1AsDict())
         transcoder.register(CCustomType2AsDict())
         transcoder.register(CMyDictAsDict())
@@ -154,6 +157,14 @@ class TestCJSONTranscoder(TranscoderTestCase):
         obj = 211.7
         data = transcoder.encode(obj)
         self.assertEqual(data, b"211.7")
+        copy = transcoder.decode(data)
+        self.assertEqual(obj, copy)
+
+    def test_decimal(self):
+        transcoder = self.construct_transcoder()
+        obj = Decimal("3.141592653589793")
+        data = transcoder.encode(obj)
+        self.assertEqual(data, b'{"_type_":"decimal_str","_data_":"3.141592653589793"}')
         copy = transcoder.decode(data)
         self.assertEqual(obj, copy)
 

@@ -27,9 +27,9 @@ build = 'build.py'
 
 [tool.poetry.dependencies]
 python = "^3.8"
-#eventsourcing = { version = "~9.2.3" }
+eventsourcing = { version = "~9.2.3" }
 #eventsourcing = { git = "https://github.com/pyeventsourcing/eventsourcing.git", branch = "main"}
-eventsourcing = { path = "../eventsourcing/", develop = true }
+#eventsourcing = { path = "../eventsourcing/", develop = true }
 
 [tool.poetry.dev-dependencies]
 black = { version = "*", allow-prereleases = true }

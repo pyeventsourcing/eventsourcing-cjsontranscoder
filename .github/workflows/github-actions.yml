@@ -88,6 +88,10 @@ jobs:
 #        run: |
 #          PGPASSWORD=postgres psql -c 'CREATE DATABASE {{cookiecutter.project_slug}};' -U postgres -h localhost
 #          PGPASSWORD=postgres psql -c "CREATE USER eventsourcing WITH PASSWORD 'eventsourcing';" -U postgres -h localhost
+      - name: Build extensions in place
+        run: |
+          pip install Cython
+          make build-inplace
       - name: Run tests
         run: make test
 #        env:

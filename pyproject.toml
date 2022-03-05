@@ -19,8 +19,8 @@ readme = "README.md"
 homepage = "https://eventsourcing.readthedocs.io/"
 repository = "https://github.com/pyeventsourcing/eventsourcing-orjsontranscoder"
 include = [
-    "_eventsourcing_orjsontranscoder.pyx",
-    "_eventsourcing_orjsontranscoder.pyd",
+    "_eventsourcing_cjsontranscoder.pyx",
+    "_eventsourcing_cjsontranscoder.pxd",
     "build.py",
 ]
 build = 'build.py'

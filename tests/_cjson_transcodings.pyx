@@ -12,11 +12,9 @@ from _eventsourcing_cjsontranscoder cimport CTranscoding
 
 
 cdef class CCustomType1AsDict(CTranscoding):
-    cpdef object type(self):
-        return CustomType1
-
-    cpdef str name(self):
-        return "custom_type1_as_dict"
+    def __init__(self):
+        self.type = CustomType1
+        self.name = "custom_type1_as_dict"
 
     cpdef object encode(self, object obj):
         return obj.value
@@ -26,11 +24,9 @@ cdef class CCustomType1AsDict(CTranscoding):
 
 
 cdef class CCustomType2AsDict(CTranscoding):
-    cpdef object type(self):
-        return CustomType2
-
-    cpdef str name(self):
-        return "custom_type2_as_dict"
+    def __init__(self):
+        self.type = CustomType2
+        self.name = "custom_type2_as_dict"
 
     cpdef object encode(self, object obj):
         return obj.value
@@ -40,11 +36,9 @@ cdef class CCustomType2AsDict(CTranscoding):
 
 
 cdef class CMyDictAsDict(CTranscoding):
-    cpdef object type(self):
-        return MyDict
-
-    cpdef str name(self):
-        return "mydict"
+    def __init__(self):
+        self.type = MyDict
+        self.name = "mydict"
 
     cpdef object encode(self, object obj):
         return obj.copy()
@@ -54,11 +48,9 @@ cdef class CMyDictAsDict(CTranscoding):
 
 
 cdef class CMyListAsList(CTranscoding):
-    cpdef object type(self):
-        return MyList
-
-    cpdef str name(self):
-        return "mylist"
+    def __init__(self):
+        self.type = MyList
+        self.name = "mylist"
 
     cpdef object encode(self, object obj):
         return list(obj)
@@ -68,11 +60,9 @@ cdef class CMyListAsList(CTranscoding):
 
 
 cdef class CMyStrAsStr(CTranscoding):
-    cpdef object type(self):
-        return MyStr
-
-    cpdef str name(self):
-        return "mystr"
+    def __init__(self):
+        self.type = MyStr
+        self.name = "mystr"
 
     cpdef object encode(self, object obj):
         return str(obj)
@@ -82,11 +72,9 @@ cdef class CMyStrAsStr(CTranscoding):
 
 
 cdef class CMyIntAsInt(CTranscoding):
-    cpdef object type(self):
-        return MyInt
-
-    cpdef str name(self):
-        return "myint"
+    def __init__(self):
+        self.type = MyInt
+        self.name = "myint"
 
     cpdef object encode(self, object obj):
         return int(obj)

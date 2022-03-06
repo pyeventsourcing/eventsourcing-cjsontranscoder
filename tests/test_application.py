@@ -14,12 +14,9 @@ from eventsourcing_cjsontranscoder import (
 
 
 # Subclass of Cython extension type in pure Python.
-class CMyIntAsInt(CTranscoding):
-    def type(self):
-        return MyInt
-
-    def name(self):
-        return "myint_as_int"
+class CMyIntAsInt(Transcoding):
+    type = MyInt
+    name = "myint_as_int"
 
     def encode(self, obj):
         return int(obj)

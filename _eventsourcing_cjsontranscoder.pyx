@@ -51,29 +51,37 @@ cdef class CJSONTranscoder:
         self.names = {}
         self.decoder = JSONDecoder()
 
-    def register(self, transcoding):
+    cpdef register(self, transcoding):
         """
         Registers given transcoding with the transcoder.
         """
         if isinstance(transcoding, Transcoding):
             transcoding = CTranscodingAdaptor(transcoding)
-        self.types[transcoding.type()] = transcoding
-        self.names[transcoding.name()] = transcoding
+        self._register(transcoding)
+
+    cdef void _register(self, CTranscoding transcoding):
+        self.types[transcoding.type] = transcoding
+        self.names[transcoding.name] = transcoding
 
     cpdef bytes encode(self, object obj):
         """
         Encodes given object to JSON bytes.
         """
         cdef list output = list()
-        cdef PyObject * types = <PyObject *>self.types
-        cdef NodeFrame * frame = NULL_FRAME
+
+        cdef EncoderContext * ctx = <EncoderContext *>PyMem_Malloc(sizeof(EncoderContext))
+        ctx.output = <PyObject *>output
+        ctx.types = <PyObject *>self.types
+        ctx.frame = NULL_FRAME
 
         # Visit the root node.
-        frame = visit_node(<PyObject *>obj, <PyObject *>output, types, frame)
+        visit_node(<PyObject *>obj, ctx)
 
         # Iterate over the frames.
-        while frame != NULL_FRAME:
-            frame = visit_frame(<PyObject *>output, types, frame)
+        while ctx.frame != NULL_FRAME:
+            visit_frame(ctx)
+
+        PyMem_Free(ctx)
 
         # Join output strings and encode unicode as bytes.
         return PyUnicode_AsUTF8String(PyUnicode_Join("", output))
@@ -154,9 +162,13 @@ cdef class CJSONTranscoder:
         return obj
 
 
-ctypedef PyObject *(*get_next_child_func)(
-    PyObject * output, PyObject * types, NodeFrame * frame
-) except NULL
+ctypedef PyObject *(*get_next_child_func)(EncoderContext * ctx) except NULL
+
+
+cdef struct EncoderContext:
+    PyObject * output
+    PyObject * types
+    NodeFrame * frame
 
 
 cdef struct NodeFrame:
@@ -170,150 +182,135 @@ cdef struct NodeFrame:
     get_next_child_func get_next_child
 
 
-cdef NodeFrame * new_list_frame(PyObject * node, NodeFrame * parent):
+cdef void new_list_frame(PyObject * node, EncoderContext * ctx):
     cdef NodeFrame * frame = <NodeFrame *>PyMem_Malloc(sizeof(NodeFrame))
     Py_INCREF(<object>node)
     frame.node = node
-    frame.parent = parent
+    frame.parent = ctx.frame
+    ctx.frame = frame
     frame.children = node
     frame.node_len = PyList_Size(<list>node)
     frame.i_child = 0
     frame.get_next_child = get_next_list_child
     frame.start_char = LIST_START
     frame.finish_char = LIST_FINISH
-    return frame
 
 
 cdef NodeFrame * NULL_FRAME = <NodeFrame *>PyMem_Malloc(sizeof(NodeFrame))
 
 
-cdef PyObject * get_next_list_child(
-    PyObject * output, PyObject * types, NodeFrame * frame
-) except NULL:
-    return <PyObject *>PyList_GET_ITEM(<object>frame.children, frame.i_child)
+cdef PyObject * get_next_list_child(EncoderContext * ctx) except NULL:
+    return <PyObject *>PyList_GET_ITEM(<object>ctx.frame.children, ctx.frame.i_child)
 
 
-cdef NodeFrame * new_dict_frame(PyObject * node, NodeFrame * parent):
+cdef void new_dict_frame(PyObject * node, EncoderContext * ctx):
     cdef NodeFrame * frame = <NodeFrame *>PyMem_Malloc(sizeof(NodeFrame))
     cdef list dict_items = PyDict_Items(<object>node)
     Py_INCREF(dict_items)
 
     frame.node = node
-    frame.parent = parent
+    frame.parent = ctx.frame
+    ctx.frame = frame
     frame.children = <PyObject *>dict_items
     frame.node_len = PyList_Size(dict_items)
     frame.i_child = 0
     frame.get_next_child = get_next_dict_child
     frame.start_char = DICT_START
     frame.finish_char = DICT_FINISH
-    return frame
 
 
-cdef PyObject * get_next_dict_child(
-    PyObject * output, PyObject * types, NodeFrame * frame
-) except NULL:
-    cdef PyObject * key_and_value = PyList_GET_ITEM(<list>frame.children, frame.i_child)
-    append_output(output, '"')
-    append_output(output, <object>PyTuple_GET_ITEM(<tuple>key_and_value, 0))
-    append_output(output, '":')
+cdef PyObject * get_next_dict_child(EncoderContext * ctx) except NULL:
+    cdef PyObject * key_and_value = PyList_GET_ITEM(<list>ctx.frame.children, ctx.frame.i_child)
+    append_output(ctx.output, '"')
+    append_output(ctx.output, <object>PyTuple_GET_ITEM(<tuple>key_and_value, 0))
+    append_output(ctx.output, '":')
     return PyTuple_GET_ITEM(<tuple>key_and_value, 1)
 
 
-cdef NodeFrame * new_custom_type_frame(PyObject * node, NodeFrame * parent):
+cdef void new_custom_type_frame(PyObject * node, EncoderContext * ctx):
     cdef NodeFrame * frame = <NodeFrame *>PyMem_Malloc(sizeof(NodeFrame))
     frame.node = node
-    frame.parent = parent
+    frame.parent = ctx.frame
+    ctx.frame = frame
     frame.children = NULL
     frame.node_len = 1
     frame.i_child = 0
     frame.get_next_child = get_next_custom_type_child
     frame.start_char = DICT_START
     frame.finish_char = DICT_FINISH
-    return frame
 
 
-cdef str NOT_SERIALIZABLE = (
-    "Object of type %s is not serializable. Please define and "
-    "register a custom transcoding for this type."
-)
+cdef str NOT_SERIALIZABLE = "Object of type %s is not serializable. Please define \
+and register a custom transcoding for this type."
 
-cdef PyObject * get_next_custom_type_child(
-    PyObject * output, PyObject * types, NodeFrame * frame
-) except NULL:
+cdef PyObject * get_next_custom_type_child(EncoderContext * ctx) except NULL:
     cdef CTranscoding transcoding
     cdef object encoded_obj
     cdef bytes error_msg
-    cdef void * dict_item = PyDict_GetItem(<object>types, <object>frame.node.ob_type)
+    cdef void * dict_item = PyDict_GetItem(<object>ctx.types, <object>ctx.frame.node.ob_type)
     if dict_item == NULL:
-        error_msg = (NOT_SERIALIZABLE % <object>frame.node.ob_type).encode('utf8')
+        # error_msg = NOT_SERIALIZABLE % <object>ctx.frame.node.ob_type
+        # raise TypeError(error_msg)
+        error_msg = (NOT_SERIALIZABLE % <object>ctx.frame.node.ob_type).encode('utf8')
         PyErr_SetString(TypeError, <char *>error_msg)
         return NULL
     else:
         transcoding = <CTranscoding>dict_item
-        append_output(output, '"_type_":"')
-        append_output(output, transcoding.name())
-        append_output(output, '","_data_":')
-        encoded_obj = transcoding.encode(<object>frame.node)
-        frame.children = <PyObject *>encoded_obj
+        append_output(ctx.output, '"_type_":"')
+        append_output(ctx.output, transcoding.name)
+        append_output(ctx.output, '","_data_":')
+        encoded_obj = transcoding.encode(<object>ctx.frame.node)
+        ctx.frame.children = <PyObject *>encoded_obj
         Py_INCREF(encoded_obj)
-        return frame.children
+        return ctx.frame.children
 
 
-cdef NodeFrame * visit_node(
-    PyObject * node, PyObject * output, PyObject * types, NodeFrame * frame
-):
+cdef int visit_node(PyObject * node, EncoderContext * ctx) except -1:
     # Decide whether to start a new frame for a
     # collection or append output for a leaf node.
     cdef PyTypeObject * node_type = node.ob_type
     if node_type is TYPE_LIST:
-        return new_list_frame(node, frame)
+        new_list_frame(node, ctx)
     elif node_type is TYPE_DICT:
-        return new_dict_frame(node, frame)
+        new_dict_frame(node, ctx)
     elif node_type == TYPE_STR:
-        append_output(output, encode_basestring(<object>node))
+        append_output(ctx.output, encode_basestring(<object>node))
     elif node_type is TYPE_INT:
-        append_output(output, str(<object>node))
+        append_output(ctx.output, str(<object>node))
     elif node_type is TYPE_BOOL:
         if <object>node is True:
-            append_output(output, "true")
+            append_output(ctx.output, "true")
         else:
-            append_output(output, "false")
+            append_output(ctx.output, "false")
     elif node_type is TYPE_FLOAT:
-        append_output(output, str(<object> node))
+        append_output(ctx.output, str(<object> node))
     elif node_type is TYPE_NONE:
-        append_output(output, "null")
+        append_output(ctx.output, "null")
     else:
-        return new_custom_type_frame(node, frame)
-    return NULL_FRAME
+        new_custom_type_frame(node, ctx)
 
 
-cdef NodeFrame * visit_frame(
-    PyObject * output, PyObject * types, NodeFrame * frame
-) except NULL:
-    cdef NodeFrame * next_frame = NULL_FRAME
+cdef int visit_frame(EncoderContext * ctx) except -1:
+    cdef NodeFrame * frame = ctx.frame
     cdef NodeFrame * parent_frame = NULL_FRAME
+    cdef PyObject * next_child
 
     # Check if this is the first node.
     if frame.i_child == 0:
-        # Start output for this frame.
-        append_output(output, <object>frame.start_char)
+        # Start output for this ctx.frame.
+        append_output(ctx.output, <object>frame.start_char)
 
-    # Loop over the child nodes until we get a new frame.
-    while next_frame == NULL_FRAME and frame.i_child < frame.node_len:
+    # Loop over the child nodes until we get a new ctx.frame.
+    while frame == ctx.frame and frame.i_child < frame.node_len:
 
         # Check if we are continuing after the first child.
         if frame.i_child > 0:
             # Continue output for this frame's children.
-            append_output(output, COMMA_SEPARATOR)
+            append_output(ctx.output, COMMA_SEPARATOR)
 
         # Visit the next child node.
-        next_frame = visit_node(
-            frame.get_next_child(output, types, frame), output, types, frame
-        )
-        frame.i_child += 1
-
-        # Check for the error code.
-        if next_frame == NULL:
+        next_child = frame.get_next_child(ctx)
+        if next_child == NULL:
             # There was an error, so free all allocated memory
             # decrement all incremented references, and break.
             while frame != NULL_FRAME:
@@ -323,20 +320,22 @@ cdef NodeFrame * visit_frame(
                 frame = parent_frame
             break
 
+        else:
+            visit_node(next_child, ctx)
+            frame.i_child += 1
+
+
     # Check if this frame has been completed.
-    if next_frame == NULL_FRAME and frame.i_child == frame.node_len:
+    if frame == ctx.frame and frame.i_child == frame.node_len:
         # We aren't going to visit a child frame, and we have
         # visited all nodes in this frame, so finish output,
         # free allocated memory, decrement incremented references,
         # and return to parent frame.
-        append_output(output, <object>frame.finish_char)
-        next_frame = frame.parent
+        append_output(ctx.output, <object>ctx.frame.finish_char)
+        parent_frame = frame.parent
         Py_DECREF(<object>frame.children)
-        PyMem_Free(frame)
-
-    # Return the next frame. It will be NULL_FRAME if we just
-    # finished the root frame, or NULL if we got an error.
-    return next_frame
+        PyMem_Free(ctx.frame)
+        ctx.frame = parent_frame
 
 
 cdef void append_output(PyObject * output, str s):
@@ -347,12 +346,6 @@ cdef class CTranscoding:
     """
     Base class for transcoding objects.
     """
-    cpdef object type(self):
-        raise NotImplementedError()
-
-    cpdef str name(self):
-        raise NotImplementedError()
-
     cpdef object encode(self, object obj):
         raise NotImplementedError()
 
@@ -368,12 +361,8 @@ cdef class CTranscodingAdaptor(CTranscoding):
 
     def __init__(self, transcoding: Transcoding):
         self.transcoding = transcoding
-
-    cpdef object type(self):
-        return self.transcoding.type
-
-    cpdef str name(self):
-        return self.transcoding.name
+        self.type = transcoding.type
+        self.name = transcoding.name
 
     cpdef object encode(self, object obj):
         return self.transcoding.encode(obj)
@@ -386,11 +375,9 @@ cdef class CTupleAsList(CTranscoding):
     """
     Transcoding that represents :class:`tuple` objects as lists.
     """
-    cpdef object type(self):
-        return tuple
-
-    cpdef str name(self):
-        return "tuple_as_list"
+    def __init__(self):
+        self.type = tuple
+        self.name = "tuple_as_list"
 
     cpdef object encode(self, object obj):
         return [i for i in obj]
@@ -403,11 +390,9 @@ cdef class CDatetimeAsISO(CTranscoding):
     """
     Transcoding that represents :class:`datetime` objects as ISO strings.
     """
-    cpdef object type(self):
-        return datetime
-
-    cpdef str name(self):
-        return "datetime_iso"
+    def __init__(self):
+        self.type = datetime
+        self.name = "datetime_iso"
 
     cpdef object encode(self, object obj):
         return obj.isoformat()
@@ -420,11 +405,9 @@ cdef class CUUIDAsHex(CTranscoding):
     """
     Transcoding that represents :class:`UUID` objects as hex values.
     """
-    cpdef object type(self):
-        return UUID
-
-    cpdef str name(self):
-        return "uuid_hex"
+    def __init__(self):
+        self.type = UUID
+        self.name = "uuid_hex"
 
     cpdef object encode(self, object obj):
         return obj.hex
@@ -437,12 +420,9 @@ cdef class CDecimalAsStr(CTranscoding):
     """
     Transcoding that represents :class:`Decimal` objects as strings.
     """
-
-    cpdef object type(self):
-        return Decimal
-
-    cpdef str name(self):
-        return "decimal_str"
+    def __init__(self):
+        self.type = Decimal
+        self.name = "decimal_str"
 
     cpdef object encode(self, object obj):
         return str(obj)

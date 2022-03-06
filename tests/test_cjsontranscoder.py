@@ -204,12 +204,13 @@ class TestCJSONTranscoder(TranscoderTestCase):
         # Warm up.
         timeit.timeit(lambda: transcoder.encode(obj), number=100)
 
-        number = 10000
+        number = 100000
         duration = timeit.timeit(lambda: transcoder.encode(obj), number=number)
         print(
             f"{transcoder.__class__.__name__} encode:"
             f" {1000000 * duration / number:.1f} μs"
         )
+        # return
 
         data = transcoder.encode(obj)
         transcoder.decode(data)

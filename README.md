@@ -77,15 +77,7 @@ obj = {
 
 ## Custom Transcodings
 
-You can register subclasses of the `Transcoding` class with the `CJSONTranscoder`.
-This is the easiest option if you have already defined transcodings for in your
-project, but it is also the slowest option.
-
-Alternatively, you can define custom transcodings in pure Python code by subclassing
-the Cython extension type `CTranscoding`. The prefix `C` is used to distinguish
-these classes from the `Transcoding` classes provided by the core Python
-eventsourcing library. For example, consider the classes `MyInt` and `CMyIntAsInt`
-below.
+Consider the class `MyInt` below, which is a subclass of `int`.
 
 ```python
 class MyInt(int):
@@ -96,18 +88,17 @@ class MyInt(int):
         return type(self) == type(other) and super().__eq__(other)
 ```
 
-You can define a custom transcoding for `MyInt` as a normal Python class in a
-normal Python module (`.py` file) using the `CTranscoding` class.
+You can define and register subclasses of the `Transcoding` class with the
+`CJSONTranscoder` in the same way as with the core library's `JSONTranscoder`.
+This is the easiest option if you have already defined transcodings for in your
+project, but it is also the slowest option.
 
 ```python
-from eventsourcing_cjsontranscoder import CTranscoding
+from eventsourcing.persistence import Transcoding
 
-class CMyIntAsInt(CTranscoding):
-    def type(self):
-        return MyInt
-
-    def name(self):
-        return "myint_as_int"
+class MyIntAsInt(Transcoding):
+    type = MyInt
+    name = "myint_as_int"
 
     def encode(self, obj):
         return int(obj)
@@ -116,9 +107,11 @@ class CMyIntAsInt(CTranscoding):
         return MyInt(data)
 ```
 
-Alternatively for slightly greater transcoding performance, you can define a
-custom transcoding for `MyInt` as a Cython extension type in a Cython module
-(`.pyx` file) using the `CTranscoding` extension type.
+Alternatively, you can define a custom transcoding for `MyInt` as a Cython extension
+type in a Cython module (`.pyx` file) using the `CTranscoding` extension type.
+
+The prefix `C` is used to distinguish these classes from the `Transcoding` classes
+provided by the core Python eventsourcing library. For example.
 
 ```cython
 from _eventsourcing_cjsontranscoder cimport CTranscoding
@@ -126,11 +119,9 @@ from _eventsourcing_cjsontranscoder cimport CTranscoding
 from my_domain_model import MyInt
 
 cdef class CMyIntAsInt(CTranscoding):
-    cpdef object type(self):
-        return MyInt
-
-    cpdef str name(self):
-        return "myint_as_int"
+    def __init__(self):
+        self.type = MyInt
+        self.name = "myint_as_int"
 
     cpdef object encode(self, object obj):
         return int(obj)

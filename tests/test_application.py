@@ -7,7 +7,6 @@ from eventsourcing.tests.persistence import MyInt, MyStr
 from eventsourcing_cjsontranscoder import (
     CDatetimeAsISO,
     CJSONTranscoder,
-    CTranscoding,
     CTupleAsList,
     CUUIDAsHex,
 )
